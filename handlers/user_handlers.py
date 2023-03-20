@@ -3,7 +3,7 @@ from copy import deepcopy
 from aiogram import Router
 from aiogram.filters import Command, CommandStart, Text
 from aiogram.types import CallbackQuery, Message
-from database.database import user_dict_template, users_db
+from database.database import user_dict_template, users_db, update_db
 from filters.filters import IsDelBookmarkCallbackData, IsDigitCallbackData
 from keyboards.bookmarks_kb import (create_bookmarks_keyboard,
                                     create_edit_keyboard)
@@ -22,6 +22,8 @@ async def process_start_command(message: Message):
     await message.answer(LEXICON['/start'])
     if message.from_user.id not in users_db:
         users_db[message.from_user.id] = deepcopy(user_dict_template)
+        update_db()
+
 
 
 # Этот хэндлер будет срабатывать на команду "/help"
@@ -36,6 +38,7 @@ async def process_help_command(message: Message):
 @router.message(Command(commands='beginning'))
 async def process_beginning_command(message: Message):
     users_db[message.from_user.id]['page'] = 1
+    update_db()
     text = book[users_db[message.from_user.id]['page']]
     await message.answer(
             text=text,
@@ -80,6 +83,7 @@ async def process_forward_press(callback: CallbackQuery):
     if users_db[callback.from_user.id]['page'] < len(book):
         users_db[callback.from_user.id]['page'] += 1
         text = book[users_db[callback.from_user.id]['page']]
+        update_db()
         await callback.message.edit_text(
             text=text,
             reply_markup=create_pagination_keyboard(
@@ -95,6 +99,7 @@ async def process_forward_press(callback: CallbackQuery):
 async def process_backward_press(callback: CallbackQuery):
     if users_db[callback.from_user.id]['page'] > 1:
         users_db[callback.from_user.id]['page'] -= 1
+        update_db()
         text = book[users_db[callback.from_user.id]['page']]
         await callback.message.edit_text(
                 text=text,
@@ -111,6 +116,7 @@ async def process_backward_press(callback: CallbackQuery):
 async def process_page_press(callback: CallbackQuery):
     users_db[callback.from_user.id]['bookmarks'].add(
         users_db[callback.from_user.id]['page'])
+    update_db()
     await callback.answer('Страница добавлена в закладки!')
 
 
@@ -120,6 +126,7 @@ async def process_page_press(callback: CallbackQuery):
 async def process_bookmark_press(callback: CallbackQuery):
     text = book[int(callback.data)]
     users_db[callback.from_user.id]['page'] = int(callback.data)
+    update_db()
     await callback.message.edit_text(
                 text=text,
                 reply_markup=create_pagination_keyboard(
@@ -154,6 +161,7 @@ async def process_cancel_press(callback: CallbackQuery):
 async def process_del_bookmark_press(callback: CallbackQuery):
     users_db[callback.from_user.id]['bookmarks'].remove(
                                                     int(callback.data[:-3]))
+    update_db()
     if users_db[callback.from_user.id]['bookmarks']:
         await callback.message.edit_text(
                     text=LEXICON['/bookmarks'],

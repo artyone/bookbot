@@ -1,7 +1,6 @@
-from re import findall
 
 BOOK_PATH = 'book/book.txt'
-PAGE_SIZE = 100
+PAGE_SIZE = 1050
 
 book: dict[int, str] = {}
 
@@ -27,8 +26,8 @@ def prepare_book(path: str) -> None:
         page = file.read(read_size)
         counter = 1
         while page:
-            part_text, length = _get_part_text(page, 0, PAGE_SIZE)
-            book[counter] = part_text.strip()
+            text, length = _get_part_text(page, 0, PAGE_SIZE)
+            book[counter] = text.strip()
             page = page[length:] + file.read(read_size - (read_size - length))
             counter += 1
 
