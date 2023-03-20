@@ -1,2 +1,4 @@
 .bookbotvenv/
+__pycache__/
+.vscode/
 .env
